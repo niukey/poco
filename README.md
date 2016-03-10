@@ -6,7 +6,7 @@ Build Status
 
 - Travis: [![Travis Build Status](https://travis-ci.org/pocoproject/poco.png?branch=develop)](https://travis-ci.org/pocoproject/poco)
 - AppVeyor: [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/7iyrx3f233s3akae)](https://ci.appveyor.com/project/obiltschnig/poco)
-- biicode: [![Build Status](https://webapi.biicode.com/v1/badges/fenix/fenix/poco/develop)](https://www.biicode.com/fenix/fenix/poco/develop)
+
 
 ![alt text][logo]
 
@@ -30,7 +30,7 @@ Answers to POCO-related questions can also be found on [Stack Overflow](http://s
 ----
 In regards to Boost, in spite of some functional overlapping,
 POCO is best thought of as a Boost complement (rather than replacement).
-Side-by-side use of Boost and POCO is a very common occurence.
+Side-by-side use of Boost and POCO is a very common occurrence.
 
 When contributing to POCO, please adhere to our [guidelines](https://github.com/pocoproject/poco/blob/develop/CONTRIBUTING.md).
 

@@ -160,14 +160,17 @@
 	#else
 		#error "MIPS but neither MIPSEL nor MIPSEB?"
 	#endif
-
 #elif defined(__hppa) || defined(__hppa__)
 	#define POCO_ARCH POCO_ARCH_HPPA
 	#define POCO_ARCH_BIG_ENDIAN 1
 #elif defined(__PPC) || defined(__POWERPC__) || defined(__powerpc) || defined(__PPC__) || \
       defined(__powerpc__) || defined(__ppc__) || defined(__ppc) || defined(_ARCH_PPC) || defined(_M_PPC)
 	#define POCO_ARCH POCO_ARCH_PPC
-	#define POCO_ARCH_BIG_ENDIAN 1
+	#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+		#define POCO_ARCH_LITTLE_ENDIAN 1
+	#else
+		#define POCO_ARCH_BIG_ENDIAN 1
+	#endif
 #elif defined(_POWER) || defined(_ARCH_PWR) || defined(_ARCH_PWR2) || defined(_ARCH_PWR3) || \
       defined(_ARCH_PWR4) || defined(__THW_RS6000)
 	#define POCO_ARCH POCO_ARCH_POWER
@@ -242,8 +245,8 @@
 	#define POCO_COMPILER_CBUILDER
 #elif defined (__DMC__)
 	#define POCO_COMPILER_DMARS
-#elif defined (__HP_aCC)
-	#define POCO_COMPILER_HP_ACC
+#elif defined (__DECCXX)
+	#define POCO_COMPILER_COMPAC
 #elif (defined (__xlc__) || defined (__xlC__)) && defined(__IBMCPP__)
 	#define POCO_COMPILER_IBM_XLC // IBM XL C++
 #elif defined (__IBMCPP__) && defined(__COMPILER_VER__)

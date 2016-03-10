@@ -55,6 +55,9 @@ ZipFileInfo::ZipFileInfo(const ZipLocalFileHeader& header):
 		setUnixAttributes();
 
 	_rawInfo[GENERAL_PURPOSE_POS+1] |= 0x08; // Set "language encoding flag" to indicate that filenames and paths are in UTF-8.	   
+
+	if (header.searchCRCAndSizesAfterData())
+		_rawInfo[GENERAL_PURPOSE_POS] |= 0x08;
 }
 
 
@@ -95,6 +98,7 @@ void ZipFileInfo::parse(std::istream& inp, bool assumeHeaderRead)
 	_crc32 = getCRCFromHeader();
 	_compressedSize = getCompressedSizeFromHeader();
 	_uncompressedSize = getUncompressedSizeFromHeader();
+	_localHeaderOffset = getOffsetFromHeader();
 	parseDateTime();
 	Poco::UInt16 len = getFileNameLength();
 	Poco::Buffer<char> buf(len);

@@ -18,6 +18,7 @@
 #include "Poco/Util/Option.h"
 #include "Poco/Util/OptionSet.h"
 #include "Poco/Util/OptionException.h"
+#include "Poco/FileStream.h"
 #include "Poco/Exception.h"
 #if !defined(POCO_VXWORKS)
 #include "Poco/Process.h"
@@ -610,16 +611,16 @@ void ServerApplication::waitForTerminationRequest()
 }
 
 
-int ServerApplication::run(int argc, char** argv)
+int ServerApplication::run(int argc, char** pArgv)
 {
-	bool runAsDaemon = isDaemon(argc, argv);
+	bool runAsDaemon = isDaemon(argc, pArgv);
 	if (runAsDaemon)
 	{
 		beDaemon();
 	}
 	try
 	{
-		init(argc, argv);
+		init(argc, pArgv);
 		if (runAsDaemon)
 		{
 			int rc = chdir("/");
@@ -668,12 +669,12 @@ int ServerApplication::run(const std::vector<std::string>& args)
 }
 
 
-bool ServerApplication::isDaemon(int argc, char** argv)
+bool ServerApplication::isDaemon(int argc, char** pArgv)
 {
 	std::string option("--daemon");
 	for (int i = 1; i < argc; ++i)
 	{
-		if (option == argv[i])
+		if (option == pArgv[i])
 			return true;
 	}
 	return false;
@@ -682,6 +683,7 @@ bool ServerApplication::isDaemon(int argc, char** argv)
 
 void ServerApplication::beDaemon()
 {
+#if !defined(POCO_NO_FORK_EXEC)
 	pid_t pid;
 	if ((pid = fork()) < 0)
 		throw SystemException("cannot fork daemon process");
@@ -689,7 +691,7 @@ void ServerApplication::beDaemon()
 		exit(0);
 	
 	setsid();
-	umask(0);
+	umask(027);
 	
 	// attach stdin, stdout, stderr to /dev/null
 	// instead of just closing them. This avoids
@@ -701,20 +703,30 @@ void ServerApplication::beDaemon()
 	if (!fout) throw Poco::OpenFileException("Cannot attach stdout to /dev/null");
 	FILE* ferr = freopen("/dev/null", "r+", stderr);
 	if (!ferr) throw Poco::OpenFileException("Cannot attach stderr to /dev/null");
+#else
+	throw Poco::NotImplementedException("platform does not allow fork/exec");
+#endif
 }
 
 
-void ServerApplication::defineOptions(OptionSet& options)
+void ServerApplication::defineOptions(OptionSet& rOptions)
 {
-	Application::defineOptions(options);
+	Application::defineOptions(rOptions);
 
-	options.addOption(
+	rOptions.addOption(
 		Option("daemon", "", "Run application as a daemon.")
 			.required(false)
 			.repeatable(false)
 			.callback(OptionCallback<ServerApplication>(this, &ServerApplication::handleDaemon)));
 
-	options.addOption(
+	rOptions.addOption(
+		Option("umask", "", "Set the daemon's umask (octal, e.g. 027).")
+			.required(false)
+			.repeatable(false)
+			.argument("mask")
+			.callback(OptionCallback<ServerApplication>(this, &ServerApplication::handleUMask)));
+
+	rOptions.addOption(
 		Option("pidfile", "", "Write the process ID of the application to given file.")
 			.required(false)
 			.repeatable(false)
@@ -723,20 +735,35 @@ void ServerApplication::defineOptions(OptionSet& options)
 }
 
 
-void ServerApplication::handleDaemon(const std::string& name, const std::string& value)
+void ServerApplication::handleDaemon(const std::string& rName, const std::string&)
 {
 	config().setBool("application.runAsDaemon", true);
 }
 
 
-void ServerApplication::handlePidFile(const std::string& name, const std::string& value)
+void ServerApplication::handleUMask(const std::string& rName, const std::string& rValue)
 {
-	std::ofstream ostr(value.c_str());
+	int mask = 0;
+	for (std::string::const_iterator it = rValue.begin(); it != rValue.end(); ++it)
+	{
+		mask *= 8;
+		if (*it >= '0' && *it <= '7') 
+			mask += *it - '0';
+		else
+			throw Poco::InvalidArgumentException("umask contains non-octal characters", rValue);
+	}
+	umask(mask);
+}
+
+
+void ServerApplication::handlePidFile(const std::string& rName, const std::string& rValue)
+{
+	Poco::FileOutputStream ostr(rValue);
 	if (ostr.good())
 		ostr << Poco::Process::id() << std::endl;
 	else
-		throw Poco::CreateFileException("Cannot write PID to file", value);
-	Poco::TemporaryFile::registerForDeletion(value);
+		throw Poco::CreateFileException("Cannot write PID to file", rValue);
+	Poco::TemporaryFile::registerForDeletion(rValue);
 }
 
 

@@ -23,18 +23,18 @@ namespace Poco {
 namespace JSON {
 
 
-PrintHandler::PrintHandler(unsigned indent):
+PrintHandler::PrintHandler(unsigned newIndent):
 	_out(std::cout),
-	_indent(indent),
+	_indent(newIndent),
 	_array(0),
 	_objStart(true)
 {
 }
 
 
-PrintHandler::PrintHandler(std::ostream& out, unsigned indent):
+PrintHandler::PrintHandler(std::ostream& out, unsigned newIndent):
 	_out(out),
-	_indent(indent),
+	_indent(newIndent),
 	_array(0),
 	_objStart(true)
 {
@@ -134,8 +134,7 @@ void PrintHandler::null()
 {
 	arrayValue();
 	_out << "null";
-
-	_objStart = false;		
+	_objStart = false;
 }
 
 
@@ -143,7 +142,7 @@ void PrintHandler::value(int v)
 {
 	arrayValue();
 	_out << v;
-	_objStart = false;	
+	_objStart = false;
 }
 
 
@@ -151,7 +150,7 @@ void PrintHandler::value(unsigned v)
 {
 	arrayValue();
 	_out << v;
-	_objStart = false;	
+	_objStart = false;
 }
 
 
@@ -160,7 +159,7 @@ void PrintHandler::value(Int64 v)
 {
 	arrayValue();
 	_out << v;
-	_objStart = false;	
+	_objStart = false;
 }
 
 
@@ -168,25 +167,24 @@ void PrintHandler::value(UInt64 v)
 {
 	arrayValue();
 	_out << v;
-	_objStart = false;	
+	_objStart = false;
 }
 #endif
 
 
-void PrintHandler::value(const std::string& value)
+void PrintHandler::value(const std::string& rValue)
 {
 	arrayValue();
-	Stringifier::formatString(value, _out);
-	_objStart = false;	
+	Stringifier::formatString(rValue, _out);
+	_objStart = false;
 }
-
 
 
 void PrintHandler::value(double d)
 {
 	arrayValue();
 	_out << d;
-	_objStart = false;	
+	_objStart = false;
 }
 
 
@@ -194,7 +192,7 @@ void PrintHandler::value(bool b)
 {
 	arrayValue();
 	_out << b;
-	_objStart = false;	
+	_objStart = false;
 }
 
 
@@ -205,13 +203,12 @@ void PrintHandler::comma()
 
 
 void PrintHandler::arrayValue()
-{	
-
-
+{
 	if (!_objStart) comma();
-	if (array()) {
+	if (array())
+	{
 		_out << _tab;
-	}	
+	}
 }
 
 

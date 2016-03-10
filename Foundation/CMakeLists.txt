@@ -104,6 +104,10 @@ if (${CMAKE_CXX_COMPILER_ID} MATCHES "SunPro")
 	set_target_properties( "${LIBNAME}" PROPERTIES LINK_FLAGS "-library=stlport4")
 endif (${CMAKE_CXX_COMPILER_ID} MATCHES "SunPro")
 
+if(ANDROID)
+	set(SYSLIBS ${SYSLIBS} log)
+endif(ANDROID)
+
 # TODO: Why is this here?
 add_definitions( -DPCRE_STATIC)
 
@@ -152,7 +156,7 @@ add_library( "${LIBNAME}" ${LIB_MODE} ${SRCS})
 add_library( "${POCO_LIBNAME}" ALIAS "${LIBNAME}")
 set_target_properties( "${LIBNAME}"
 	PROPERTIES
-	VERSION ${PROJECT_VERSION} SOVERSION ${SHARED_LIBRARY_VERSION}
+	VERSION ${SHARED_LIBRARY_VERSION} SOVERSION ${SHARED_LIBRARY_VERSION}
 	OUTPUT_NAME ${POCO_LIBNAME}
 	DEFINE_SYMBOL Foundation_EXPORTS
 	)
@@ -164,12 +168,15 @@ target_include_directories( "${LIBNAME}"
 		$<INSTALL_INTERFACE:include>
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src
 	)
+target_compile_definitions("${LIBNAME}" PUBLIC ${LIB_MODE_DEFINITIONS})
 
 POCO_INSTALL("${LIBNAME}")
 POCO_GENERATE_PACKAGE("${LIBNAME}")
 
 if (ENABLE_TESTS)
-	add_subdirectory( samples )
 	add_subdirectory( testsuite )
+endif ()
+if (ENABLE_SAMPLES)
+	add_subdirectory( samples )
 endif ()
 

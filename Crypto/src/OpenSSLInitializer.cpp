@@ -87,7 +87,12 @@ void OpenSSLInitializer::initialize()
 // "If the application does not register such a callback using CRYPTO_THREADID_set_callback(), 
 //  then a default implementation is used - on Windows and BeOS this uses the system's 
 //  default thread identifying APIs"
-	    	CRYPTO_set_id_callback(&OpenSSLInitializer::id);
+#ifndef OPENSSL_NO_DEPRECATED
+		    CRYPTO_set_id_callback(&OpenSSLInitializer::id);
+#else
+		    CRYPTO_THREADID tid;
+		    CRYPTO_THREADID_set_numeric(&tid, OpenSSLInitializer::id());
+#endif /* OPENSSL_NO_DEPRECATED */
 #endif
 		    CRYPTO_set_dynlock_create_callback(&OpenSSLInitializer::dynlockCreate);
 		    CRYPTO_set_dynlock_lock_callback(&OpenSSLInitializer::dynlock);
@@ -107,7 +112,12 @@ void OpenSSLInitializer::uninitialize()
 		    CRYPTO_set_dynlock_destroy_callback(0);
 		    CRYPTO_set_locking_callback(0);
 #ifndef POCO_OS_FAMILY_WINDOWS
+#ifndef OPENSSL_NO_DEPRECATED
 		    CRYPTO_set_id_callback(0);
+#else
+		    CRYPTO_THREADID tid;
+		    CRYPTO_THREADID_set_numeric(&tid, 0);
+#endif /* OPENSSL_NO_DEPRECATED */
 #endif
 		    delete [] _mutexes;
 		}
@@ -174,3 +184,12 @@ void uninitializeCrypto()
 
 
 } } // namespace Poco::Crypto
+
+// needed for OpenSSL static link
+#if defined(_WIN32) && !defined(POCO_DLL) && (POCO_MSVS_VERSION >= 2015) && !defined(POCO_EXTERNAL_OPENSSL)
+	FILE * __cdecl __iob_func(void)
+	{
+		static FILE poco_iob[] = { stdin, stdout, stderr };
+		return poco_iob;
+	}
+#endif
